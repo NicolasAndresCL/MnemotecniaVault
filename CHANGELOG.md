@@ -4,6 +4,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) · Versiona
 
 ## [Sin publicar]
 
+### Cambiado (patch)
+- Dependencias: `tzdata` 2026.6, `pytest-asyncio` 1.4.1 y `ruff` 0.17.3 (Dependabot, #1).
+- El CI y el Jenkinsfile instalan `ruff` con la versión de `requirements-dev.txt`: una sola fuente de verdad,
+  así una actualización de Dependabot no deja el lint con otra versión.
+
+### Agregado (patch)
+- `tests/test_version.py`: la versión debe coincidir en `pyproject.toml`, `app/__init__.py`, README (badge,
+  tabla y pie), `k8s/kustomization.yaml` y la última sección publicada del CHANGELOG (skill `release-y-tag`).
+
 ## [0.1.0] — 2026-11-02
 
 ### Agregado

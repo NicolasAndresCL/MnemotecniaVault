@@ -51,7 +51,7 @@ app/
     layout.py          # cabecera con racha, menú lateral, rutas
     widgets.py         # piezas reutilizables (stat_tile, md, run_safe…)
     pages/             # inicio, repaso, mazos, tarjetas, ganchos, palacio, gimnasio, estadisticas, importar, metodo
-tests/                 # 105 tests: dominio, importadores, API y pantallas (nicegui.testing.User)
+tests/                 # 110 tests: dominio, importadores, API, pantallas (nicegui.testing.User) y versión
 k8s/                   # Kustomize: namespace, ConfigMap, StatefulSet de Postgres, Deployment de la app
 scripts/verificar.sh   # clon local del CI sobre un clon limpio de HEAD
 scripts/smoke.sh       # 14 rutas deben responder 200 en el stack levantado
@@ -180,9 +180,9 @@ recibir tráfico pero no entra en un bucle de reinicios. En kind, las fuentes se
 
 Reproduce los jobs de `.github/workflows/ci.yml`, en orden:
 
-1. **lint**: `ruff check`, `ruff format --check`, bit de ejecución de los `.sh`, hadolint,
+1. **lint**: `ruff` (versión tomada de `requirements-dev.txt`) `check`, `ruff format --check`, bit de ejecución de los `.sh`, hadolint,
    `docker compose config`, `kubectl kustomize k8s | kubeconform -strict`.
-2. **test**: 105 tests con SQLite en memoria, cobertura **≥ 90 %** (actual: 99 %; las vistas se cubren
+2. **test**: 110 tests con SQLite en memoria (incluye `test_version.py`: la versión coincide en sus 5 lugares), cobertura **≥ 90 %** (actual: 99 %; las vistas se cubren
    con tests de pantalla y el smoke).
 3. **test-postgres**: la misma suite contra Postgres 18.
 4. **build**: `docker compose up --wait` + `scripts/smoke.sh` (14 rutas) y `down -v` siempre.
