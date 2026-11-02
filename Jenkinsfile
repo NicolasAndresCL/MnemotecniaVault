@@ -41,7 +41,7 @@ pipeline {
                     stageFallido = env.STAGE_NAME
                     enContenedor(env.PY_IMG, '''
                         python -m venv .venv-lint
-                        .venv-lint/bin/pip install -q ruff==0.17.1
+                        .venv-lint/bin/pip install -q "$(grep -E "^ruff==" requirements-dev.txt)"
                         .venv-lint/bin/ruff check .
                         .venv-lint/bin/ruff format --check .
                     ''')
