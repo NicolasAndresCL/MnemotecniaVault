@@ -1,0 +1,20 @@
+# Despliegue en Kubernetes (probado con kind / Docker Desktop). Validar:
+#   kubectl kustomize k8s | docker run --rm -i ghcr.io/yannh/kubeconform:v0.7.0 -strict -summary
+# El Secret NO está aquí (los secretos no se versionan); crearlo antes del apply:
+#   kubectl -n mnemotecnia create secret generic mnemotecnia-secrets \
+#     --from-literal=POSTGRES_PASSWORD=... --from-literal=STORAGE_SECRET=...
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mnemotecnia
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: mnemotecnia-vault
+    includeSelectors: false
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - postgres.yaml
+  - app.yaml
+images:
+  - name: mnemotecnia-vault
+    newTag: "0.1.0"

@@ -1,0 +1,30 @@
+[project]
+name = "mnemotecnia-vault"
+version = "0.1.0"
+description = "Entrenador de memoria: mnemotecnia + repaso espaciado FSRS sobre tu vault de Obsidian, CmdVault y tus proyectos."
+requires-python = ">=3.14"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# El ejecutable `pytest` (CI) no añade el cwd al sys.path como `python -m pytest`.
+pythonpath = ["."]
+addopts = "-q"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+main_file = "app/main.py"
+
+[tool.coverage.run]
+source = ["app"]
+# Las vistas NiceGUI se validan con los tests de pantalla (nicegui.testing) y el smoke test.
+omit = ["app/main.py", "app/ui/*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "BLE"]
+
+[tool.ruff.lint.per-file-ignores]
+"app/ui/theme.py" = ["E501"]  # CSS embebido
+"app/mnemonics.py" = ["E501"]  # léxico y tablas de datos

@@ -1,0 +1,60 @@
+# Mnemotecnia Vault — stack local: Postgres 18 + app NiceGUI.
+#   cp .env.example .env   (y cambiar los secretos; ajustar las rutas de las fuentes)
+#   docker compose up -d --build --wait
+#   UI: http://localhost:8095 · API: http://localhost:8095/api/health
+name: mnemotecnia
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mnemo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en tu .env}
+      POSTGRES_DB: ${POSTGRES_DB:-mnemo}
+    volumes:
+      # Postgres 18+ guarda los datos en /var/lib/postgresql/<versión>/: se monta el padre.
+      # Volumen NOMBRADO (no bind mount): en Docker Desktop un bind mount de Windows es muy lento.
+      - pg_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    image: mnemotecnia-vault:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mnemo}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mnemo}
+      STORAGE_SECRET: ${STORAGE_SECRET:?define STORAGE_SECRET en tu .env}
+      API_KEY: ${API_KEY:-}
+      ENVIRONMENT: production
+      DEFAULT_THEME: ${DEFAULT_THEME:-eren}
+      TIMEZONE: ${TIMEZONE:-America/Santiago}
+      NEW_PER_DAY: ${NEW_PER_DAY:-20}
+      DESIRED_RETENTION: ${DESIRED_RETENTION:-0.9}
+      IMPORT_ON_STARTUP: ${IMPORT_ON_STARTUP:-true}
+      VAULT_PATH: /fuentes/vault
+      CMDVAULT_SEED_PATH: /fuentes/cmdvault
+      PROJECTS_PATH: /fuentes/proyectos
+    volumes:
+      # Fuentes en SOLO LECTURA: la app nunca escribe en tu vault ni en tus proyectos.
+      # Si una ruta no existe, la fuente aparece con error en «Importar» y el resto sigue.
+      - ${VAULT_HOST_PATH:-./.fuentes-vacias}:/fuentes/vault:ro
+      - ${CMDVAULT_HOST_PATH:-./.fuentes-vacias}:/fuentes/cmdvault:ro
+      - ${PROJECTS_HOST_PATH:-./.fuentes-vacias}:/fuentes/proyectos:ro
+      - ui_storage:/app/.nicegui
+    ports:
+      - "${APP_PORT:-8095}:8080"
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+
+volumes:
+  pg_data:
+  ui_storage:

@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  selector:
+    app.kubernetes.io/name: mnemotecnia-vault
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  # Una réplica: NiceGUI guarda el estado de cada pestaña en memoria del proceso (sin sesiones pegajosas
+  # no se puede escalar horizontalmente sin perder la conexión del navegador).
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mnemotecnia-vault
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mnemotecnia-vault
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: mnemotecnia-vault
+          imagePullPolicy: IfNotPresent # kind: `kind load docker-image mnemotecnia-vault:0.1.0`
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: mnemotecnia-config
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mnemotecnia-secrets
+                  key: POSTGRES_PASSWORD
+            - name: STORAGE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mnemotecnia-secrets
+                  key: STORAGE_SECRET
+            - name: DATABASE_URL
+              value: postgresql+psycopg://mnemo:$(POSTGRES_PASSWORD)@db:5432/mnemo
+          # Arranque: la importación inicial puede tardar; startupProbe da margen sin relajar liveness.
+          startupProbe:
+            httpGet: { path: /api/live, port: http }
+            periodSeconds: 5
+            failureThreshold: 30
+          # Vivo ≠ listo: liveness no mira la BD (reiniciar la app no arregla un Postgres caído).
+          livenessProbe:
+            httpGet: { path: /api/live, port: http }
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /api/health, port: http }
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 768Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: ui-storage, mountPath: /app/.nicegui }
+            - { name: vault, mountPath: /fuentes/vault, readOnly: true }
+            - { name: cmdvault, mountPath: /fuentes/cmdvault, readOnly: true }
+            - { name: proyectos, mountPath: /fuentes/proyectos, readOnly: true }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: ui-storage
+          emptyDir: {}
+        # hostPath: en kind, montar las carpetas del host en el nodo con `extraMounts` (ver README).
+        - name: vault
+          hostPath: { path: /fuentes/vault, type: Directory }
+        - name: cmdvault
+          hostPath: { path: /fuentes/cmdvault, type: Directory }
+        - name: proyectos
+          hostPath: { path: /fuentes/proyectos, type: Directory }

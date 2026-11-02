@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mnemotecnia-config
+data:
+  POSTGRES_USER: mnemo
+  POSTGRES_DB: mnemo
+  ENVIRONMENT: production
+  DEFAULT_THEME: eren
+  TIMEZONE: America/Santiago
+  NEW_PER_DAY: "20"
+  DESIRED_RETENTION: "0.9"
+  IMPORT_ON_STARTUP: "true"
+  VAULT_PATH: /fuentes/vault
+  CMDVAULT_SEED_PATH: /fuentes/cmdvault
+  PROJECTS_PATH: /fuentes/proyectos
