@@ -1,6 +1,6 @@
-nicegui==3.18.0
-SQLAlchemy==2.1.6
-psycopg[binary]==3.3.6
+nicegui==4.0.0
+SQLAlchemy==2.1.8
+psycopg[binary]==3.3.8
 pydantic-settings==2.16.2
 fsrs==6.3.2
 PyYAML==6.0.3
