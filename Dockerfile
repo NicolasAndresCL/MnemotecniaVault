@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # ---------------------------------------------------------------- build
-FROM python:3.14-slim AS builder
+FROM python:3.15-slim AS builder
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 WORKDIR /build
 COPY requirements.txt .
@@ -9,7 +9,7 @@ RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install -r requirements.txt
 
 # ---------------------------------------------------------------- runtime
-FROM python:3.14-slim AS runtime
+FROM python:3.15-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH="/opt/venv/bin:$PATH"
 # Sin apt-get: el healthcheck usa Python, no curl.
 RUN useradd --create-home --shell /bin/bash --uid 1000 app
